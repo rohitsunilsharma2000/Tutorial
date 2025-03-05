@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  web:
+    image: python:3.9
+    command: python -m http.server 8000
+    ports:
+      - "8000:8000"
+    deploy:
+      replicas: 3
+      restart_policy:
+        condition: on-failure
+
+  redis:
+    image: redis:latest
+    deploy:
+      replicas: 1
