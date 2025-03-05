@@ -1,4 +1,4 @@
-# Docker Certified Associate Exam Preparation Guide (v1.5 December 2022)
+# Docker Certified Associate Exam Preparation Guide (v1.5 December 2025)
 
 ## Links Checker
 [![Check Markdown links](https://github.com/Evalle/DCA/actions/workflows/action.yml/badge.svg)](https://github.com/Evalle/DCA/actions/workflows/action.yml)
@@ -33,8 +33,8 @@ Some of the products have been renamed, there are no changes regarding this in t
 ## Content
 
 ### Domain 1: Orchestration (25% of exam)
-- [Complete the setup of a swarm mode cluster, with managers and worker nodes](https://docs.docker.com/engine/swarm/swarm-tutorial/create-swarm/)
-- [Describe and demonstrate how to extend the instructions to run individual containers into running services under swarm](https://docs.docker.com/engine/swarm/swarm-tutorial/deploy-service/)
+- [Complete the setup of a swarm mode cluster, with managers and worker nodes](https://github.com/rohitsunilsharma2000/Tutorial/blob/main/Docker/Create%20a%20swarm/Complete%20the%20setup%20of%20a%20swarm%20mode%20cluster,%20with%20managers%20and%20worker%20nodes.md)
+- [Describe and demonstrate how to extend the instructions to run individual containers into running services under swarm](https://github.com/rohitsunilsharma2000/Tutorial/blob/main/Docker/Inspect%20a%20service%20on%20the%20swarm/Complete%20the%20setup%20of%20a%20swarm%20mode%20cluster%2C%20with%20managers%20and%20worker%20nodes.md)
 - [Describe the importance of quorum in a swarm cluster.](https://docs.docker.com/engine/swarm/raft/)
 - [Describe the difference between running a container and running a service.](https://docs.docker.com/engine/swarm/how-swarm-mode-works/services/#services-tasks-and-containers)
 - [Interpret the output of “docker inspect” commands](https://docs.docker.com/engine/reference/commandline/inspect/)
