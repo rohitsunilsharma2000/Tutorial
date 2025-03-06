@@ -1,122 +1,182 @@
-### **🔹 Enhancing Docker Swarm Deployment with Networks and Published Ports**
-To improve the **Spring Boot** application's **networking and accessibility**, we will:
-✅ **Define a custom network** for communication.  
-✅ **Publish ports** to allow external access.  
-✅ **Ensure proper service discovery** within Swarm.
+### **🔹 Deploying and Orchestrating a Spring Boot App in Docker Swarm with Networks & Published Ports** 🚀
+
+This guide extends the **Spring Boot Swarm deployment** by:
+✅ **Adding networks** for better communication  
+✅ **Publishing ports** for external access  
+✅ **Scaling and updating the service dynamically**  
 
 ---
 
-## **📌 1️⃣ Updated `docker-compose.yml` with Networks & Published Ports**
-Here’s the **updated** stack file:
+## **📌 1️⃣ Updated `Dockerfile`**
+```dockerfile
+# Use OpenJDK 17
+FROM openjdk:17-jdk-slim
 
+# Set working directory inside the container
+WORKDIR /app
+
+# Copy the built JAR file into the container
+COPY target/demo-0.0.1-SNAPSHOT.jar app.jar
+
+# Expose port 8080 inside the container
+EXPOSE 8080
+
+# Run the application
+ENTRYPOINT ["java", "-jar", "app.jar"]
+```
+
+---
+
+## **📌 2️⃣ Updated `docker-compose.yml` (With Networks & Published Ports)**
 ```yaml
 version: "3.8"
+
+networks:
+  demo-net:
+    driver: overlay  # Enable multi-node communication in Swarm
 
 services:
   demo:
     image: demo:latest
     build: .
     networks:
-      - demo-net  # Attach service to custom network
+      - demo-net  # Attach service to the custom network
     ports:
-      - "9090:8080"  # Publish container's 8080 port to host 9090
+      - "9090:8080"  # Exposing on host port 9090, mapping to container's 8080
     deploy:
-      replicas: 5  # Increased replicas
+      replicas: 3  # Running 3 instances
       restart_policy:
         condition: on-failure
-
-networks:
-  demo-net:
-    driver: overlay  # Enables communication across multiple nodes
 ```
+- **Added `demo-net` network** → Ensures **isolated** communication within Swarm.  
+- **Published port `9090`** → Maps **external traffic to the container’s `8080`**.  
 
 ---
 
-## **📌 2️⃣ Deploy the Updated Stack**
-After updating `docker-compose.yml`, redeploy the stack:
+## **🚀 3️⃣ Build and Deploy the Stack**
+### **Step 1: Build the JAR**
+```sh
+mvn clean package
+```
+- This compiles and packages the application into a JAR file.
+
+### **Step 2: Build and Tag the Docker Image**
+```sh
+docker build -t demo .
+```
+
+### **Step 3: Initialize Docker Swarm (If not already initialized)**
+```sh
+docker swarm init
+```
+- Initializes Swarm mode if it’s not already running.
+
+### **Step 4: Deploy the Stack**
 ```sh
 docker stack deploy -c docker-compose.yml demo
 ```
-This will:
-✅ Create a custom network (`demo-net`).  
-✅ Attach the `demo` service to `demo-net`.  
-✅ Map **host port `9090`** to **container port `8080`**.  
-✅ Deploy the service with **5 replicas**.
+- Deploys the **Spring Boot app** as a **Swarm stack**.
 
 ---
 
-## **📌 3️⃣ Verify the Network**
-Check if the network exists:
+## **📌 4️⃣ Verify and Test the Deployment**
+### **Check Running Services**
 ```sh
-docker network ls
+docker stack services demo
 ```
-Look for `demo-net`.
 
-Inspect the network details:
+### **Check Running Containers**
 ```sh
-docker network inspect demo-net
+docker ps
 ```
-It should show the connected **containers (replicas of `demo` service`).**
 
----
-
-## **📌 4️⃣ Test the Application**
+### **Test the API Endpoint**
 Run:
 ```sh
 curl http://localhost:9090/api/hello
 ```
-You should see:
+**Expected Output:**
 ```
 Hello from Spring Boot running in Swarm!
 ```
 
 ---
 
-## **📌 5️⃣ View Service Details**
-Check published ports:
+## **📌 5️⃣ Scaling the Service**
+To increase the number of replicas dynamically:
 ```sh
-docker service ls
+docker service scale demo_demo=5
 ```
-You should see:
-```
-ID            NAME        MODE        REPLICAS   IMAGE          PORTS
-abcd1234      demo_demo   replicated  5/5        demo:latest    *:9090->8080/tcp
-```
-- **Host port `9090`** maps to **container `8080`**.
+- This scales the `demo` service to **5 replicas**.
 
-Check running instances:
+### **Verify Scaling**
 ```sh
 docker service ps demo_demo
 ```
+- Confirms **all replicas** are running.
 
 ---
 
-## **📌 6️⃣ Testing Network Communication**
-To check service discovery **inside Swarm**, start an interactive shell in one of the containers:
+## **📌 6️⃣ Updating the Service**
+### **🔹 Solution 1: Use `--force` to Trigger Update**
+If Swarm does not detect changes, force a restart:
 ```sh
-docker exec -it $(docker ps | grep demo_demo | awk '{print $1}') sh
+docker service update --force demo_demo
 ```
-Now test internal communication:
+
+### **🔹 Solution 2: Update Image with Registry**
+1. **Rebuild the Image**
+   ```sh
+   docker build -t demo:v2 .
+   ```
+2. **Push to a Local Registry**
+   ```sh
+   docker tag demo:v2 localhost:5000/demo
+   docker push localhost:5000/demo
+   ```
+3. **Update the Service**
+   ```sh
+   docker service update --image localhost:5000/demo demo_demo
+   ```
+
+---
+
+## **📌 7️⃣ Viewing Logs**
+To monitor logs:
 ```sh
-curl http://demo:8080/api/hello
+docker service logs -f demo_demo
 ```
-Since Swarm **automatically resolves service names**, this should return:
+- Shows **real-time logs** for debugging.
+
+---
+
+## **📌 8️⃣ Removing the Stack**
+To stop and clean up:
+```sh
+docker stack rm demo
 ```
-Hello from Spring Boot running in Swarm!
+- Removes **all services** from the Swarm.
+
+To leave Swarm mode:
+```sh
+docker swarm leave --force
 ```
 
 ---
 
-## **✅ Summary**
-| **Task** | **Command** |
-|----------|------------|
-| Deploy Stack with Networking | `docker stack deploy -c docker-compose.yml demo` |
-| List Networks | `docker network ls` |
-| Inspect Network | `docker network inspect demo-net` |
-| Verify Services | `docker service ls` |
-| Check Running Instances | `docker service ps demo_demo` |
-| Test External Access | `curl http://localhost:9090/api/hello` |
-| Test Internal Access | `curl http://demo:8080/api/hello` from inside a container |
+## **✅ Summary of Orchestration Activities**
+| **Orchestration Activity** | **Command** |
+|---------------------------|-------------|
+| **Service Deployment** | `docker stack deploy -c docker-compose.yml demo` |
+| **Scaling Services** | `docker service scale demo_demo=5` |
+| **Load Balancing** | `curl http://localhost:9090/api/hello` |
+| **Rolling Updates** | `docker service update --image demo:v2 demo_demo` |
+| **Health Monitoring** | `docker service ps demo_demo` |
+| **Self-Healing** | Swarm **auto-restarts failed containers** |
+| **Service Discovery** | `docker network inspect demo-net` |
+| **Rollback** | `docker service rollback demo_demo` |
 
-This setup ensures **better service isolation, communication, and accessibility**.  
-Would you like to **add a database (PostgreSQL/MySQL) to this stack?** 🚀
+---
+Your Spring Boot app is now **fully orchestrated in Docker Swarm** with **networking, scaling, and updates**. 🚀🔥  
+
+Would you like to **add a database (PostgreSQL/MySQL)** to this setup? 😊
