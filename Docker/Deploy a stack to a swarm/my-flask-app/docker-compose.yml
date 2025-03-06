@@ -1,0 +1,23 @@
+version: "3.8"
+
+services:
+  flask-app:
+    image: flask-redis-app:latest
+    build: .
+    ports:
+      - "8080:8000"  # Map container port 8000 to host port 8080
+    depends_on:
+      - redis
+    environment:
+      - REDIS_HOST=redis
+    deploy:
+      replicas: 3  # Running 3 instances in Swarm
+      restart_policy:
+        condition: on-failure
+
+  redis:
+    image: redis:latest
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure

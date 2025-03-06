@@ -1,0 +1,12 @@
+version: "3.8"
+
+services:
+  flask_app:
+    image: flask_app:latest
+    build: .
+    ports:
+      - "8085:8085"
+    deploy:
+      replicas: 3
+      restart_policy:
+        condition: on-failure
