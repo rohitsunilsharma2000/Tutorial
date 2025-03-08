@@ -50,7 +50,7 @@ Some of the products have been renamed, there are no changes regarding this in t
 ### Domain 2: Image Creation, Management, and Registry (20% of exam)
 - [Describe the use of Dockerfile](https://github.com/rohitsunilsharma2000/Tutorial/blob/main/Docker/Describe%20the%20use%20of%20Dockerfile/Image%20Creation%2C%20Management%2C%20and%20Registry/Image%20Creation%2C%20Management%2C%20and%20Registry.md)
 - [Describe options, such as add, copy, volumes, expose, entry point](https://github.com/rohitsunilsharma2000/Tutorial/blob/main/Docker/Describe%20the%20use%20of%20Dockerfile/Describe%20options%2C%20such%20as%20add%2C%20copy%2C%20volumes%2C%20expose%2C%20entry%20point/Describe%20options%2C%20such%20as%20add%2C%20copy%2C%20volumes%2C%20expose%2C%20entry%20point.md)
-- [Identify and display the main parts of a Dockerfile](https://docs.docker.com/engine/reference/builder/#dockerfile-examples)
+- [Identify and display the main parts of a Dockerfile](https://github.com/rohitsunilsharma2000/Tutorial/blob/main/Docker/Describe%20the%20use%20of%20Dockerfile/Identify%20and%20display%20the%20main%20parts%20of%20a%20Dockerfile/Identify%20and%20display%20the%20main%20parts%20of%20a%20Dockerfile.md)
 - [Describe and demonstrate how to create an efficient image via a Dockerfile](https://docs.docker.com/engine/userguide/eng-image/dockerfile_best-practices/)
 - [Describe and demonstrate how to use CLI commands to manage images, such as list, delete, prune, rmi](https://docs.docker.com/engine/reference/commandline/image/#usage)
 - [Describe and demonstrate how to inspect images and report specific attributes using filter and format](https://docs.docker.com/engine/reference/commandline/images/#filtering)
