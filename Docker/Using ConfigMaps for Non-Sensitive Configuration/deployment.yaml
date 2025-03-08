@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demo-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: demo
+  template:
+    metadata:
+      labels:
+        app: demo
+    spec:
+      containers:
+      - name: demo-container
+        image: 'demo:latest'
+        # imagePullPolicy: Never
+        imagePullPolicy: IfNotPresent # Only pull if the image is missing locally
+        env:
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: db-secret
+              key: DB_USER
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: db-secret
+              key: DB_PASSWORD
+        volumeMounts:
+        - name: secret-volume
+          mountPath: /app/secrets
+          readOnly: true
+      volumes:
+      - name: secret-volume
+        secret:
+          secretName: db-secret
+
+
+# kubectl exec -it demo-deployment-74687d4db7-hm64w -- env | grep APP_ENV
+# kubectl exec -it demo-deployment-74687d4db7-p4sxp -- cat /app/config/application.properties
