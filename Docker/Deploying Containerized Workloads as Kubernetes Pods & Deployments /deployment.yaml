@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demo-deployment
+  labels:
+    app: demo
+spec:
+  replicas: 3 # Run 3 instances of the application
+  selector:
+    matchLabels:
+      app: demo
+  template:
+    metadata:
+      labels:
+        app: demo
+    spec:
+      containers:
+      - name: demo-container
+        image: demo:latest
+        imagePullPolicy: Never # Prevents Kubernetes from trying to pull from Docker Hub
+        ports:
+        - containerPort: 8080
