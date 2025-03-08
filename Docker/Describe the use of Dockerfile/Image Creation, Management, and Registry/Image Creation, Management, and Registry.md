@@ -119,4 +119,138 @@ docker rmi demo-app
 ---
 This covers **Dockerfile creation, image management, and optimization** for **containerized workloads**! 🚀🔥  
 
-Would you like to explore **Docker Compose** next? 😊
+# **🔹 Docker Compose: Simplifying Multi-Container Applications** 🚀  
+
+## **✅ What is Docker Compose?**
+Docker Compose is a tool for **defining and running multi-container Docker applications** using a **single YAML file** (`docker-compose.yml`). It allows you to:
+✅ **Manage multiple containers easily**  
+✅ **Use a single command to start/stop services**  
+✅ **Define networks, volumes, and dependencies**  
+
+---
+
+## **📌 1️⃣ Installing Docker Compose**
+If not already installed, get Docker Compose:
+```sh
+docker --version   # Verify Docker is installed
+docker-compose --version  # Verify Docker Compose
+```
+If missing, install it:
+```sh
+sudo apt-get install docker-compose
+```
+
+---
+
+## **📌 2️⃣ Basic `docker-compose.yml` Structure**
+A simple **Spring Boot + PostgreSQL** setup:
+```yaml
+version: "3.8"
+
+services:
+  app:
+    image: demo-app:latest
+    build: .
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    environment:
+      DB_HOST: db
+      DB_USER: demo_user
+      DB_PASSWORD: demo_pass
+      DB_NAME: demo_db
+    networks:
+      - app-network
+
+  db:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: demo_user
+      POSTGRES_PASSWORD: demo_pass
+      POSTGRES_DB: demo_db
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+networks:
+  app-network:
+
+volumes:
+  postgres-data:
+```
+✔ **Defines two services (`app` and `db`)**  
+✔ **Uses a shared network (`app-network`)**  
+✔ **Mounts persistent storage (`postgres-data`)**  
+
+---
+
+## **📌 3️⃣ Running Docker Compose**
+### **🔹 Step 1: Build & Start the Services**
+```sh
+docker-compose up -d
+```
+- `-d` → Runs in detached mode (background).
+
+### **🔹 Step 2: Check Running Services**
+```sh
+docker-compose ps
+```
+
+### **🔹 Step 3: View Logs**
+```sh
+docker-compose logs -f
+```
+
+### **🔹 Step 4: Stop the Services**
+```sh
+docker-compose down
+```
+
+---
+
+## **📌 4️⃣ Scaling Services**
+Increase app instances **dynamically**:
+```sh
+docker-compose up --scale app=3 -d
+```
+✔ Now **3 replicas** of the `app` service are running!
+
+---
+
+## **📌 5️⃣ Updating a Service**
+If code changes, rebuild the app:
+```sh
+docker-compose build
+docker-compose up -d
+```
+
+---
+
+## **📌 6️⃣ Removing Containers, Volumes & Networks**
+### **Stop & Remove Services**
+```sh
+docker-compose down
+```
+### **Remove Everything (Volumes & Networks)**
+```sh
+docker-compose down -v
+```
+
+---
+
+## **✅ Summary: Key Commands**
+| **Task** | **Command** |
+|----------|------------|
+| **Start Services** | `docker-compose up -d` |
+| **View Running Services** | `docker-compose ps` |
+| **Follow Logs** | `docker-compose logs -f` |
+| **Stop & Remove Containers** | `docker-compose down` |
+| **Scale Services** | `docker-compose up --scale app=3 -d` |
+| **Rebuild Image & Restart** | `docker-compose build && docker-compose up -d` |
+| **Remove Everything** | `docker-compose down -v` |
+
+---
+This simplifies **managing multi-container applications** using **Docker Compose**! 🚀🔥  
+
