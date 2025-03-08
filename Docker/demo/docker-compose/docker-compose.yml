@@ -1,0 +1,12 @@
+version: "3.8"
+
+services:
+  demo:
+    image: demo:latest
+    build: ../..
+    ports:
+      - "9090:8080"  # Exposing on host port 9090, mapping to container's 8080
+    deploy:
+      replicas: 3  # Running 3 instances
+      restart_policy:
+        condition: on-failure

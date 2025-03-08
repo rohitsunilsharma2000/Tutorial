@@ -1,0 +1,25 @@
+version: "3.8"
+
+networks:
+  demo-net:
+    driver: overlay  # Enable multi-node communication in Swarm
+
+volumes:
+  demo-logs:  # Named volume for logs
+  demo-config:  # Named volume for configuration files
+
+services:
+  demo:
+    image: demo:latest
+    build: .
+    networks:
+      - demo-net  # Attach service to the custom network
+    ports:
+      - "9090:8080"  # Exposing on host port 9090, mapping to container's 8080
+    volumes:
+      - demo-logs:/app/logs  # Mount logs directory
+      - demo-config:/app/config  # Mount configuration directory
+    deploy:
+      replicas: 3  # Running 3 instances
+      restart_policy:
+        condition: on-failure

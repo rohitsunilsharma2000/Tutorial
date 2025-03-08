@@ -1,0 +1,24 @@
+version: "3.8"
+
+services:
+  demo:
+    image: demo:latest
+    build: .
+    networks:
+      - demo-net
+    ports:
+      - "9090:8080"
+    volumes:
+      - demo-logs:/app/logs  # Mount volume for persistent logs
+    deploy:
+      replicas: 3
+      restart_policy:
+        condition: on-failure
+
+networks:
+  demo-net:
+    driver: overlay
+
+volumes:
+  demo-logs:
+    driver: local  # Persist logs using a named volume
