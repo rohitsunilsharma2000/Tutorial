@@ -1,6 +1,5 @@
 ## **🔹 Dockerfile: Image Creation, Management, and Registry** 🚀  
 
-
 A **Dockerfile** is a script containing a set of instructions to **automate the creation of Docker images**. It defines how a **container should be built, configured, and run**.
 
 ---
