@@ -1,260 +1,165 @@
-# **🔹 Configure Docker Logging with Splunk as the Logging Driver** 🚀  
-
-## **✅ Overview**
-By default, Docker logs are stored in **JSON files**. However, you can configure **Splunk** as a **logging driver** to centralize and analyze logs in **real-time**.
+### **Configuring Logging Drivers Using Splunk in Docker**
+Docker provides built-in logging drivers, and one of the most powerful logging drivers is **Splunk**. The `splunk` logging driver sends container logs to a Splunk HTTP Event Collector (HEC).
 
 ---
 
-## **📌 1️⃣ Install and Configure Splunk**
-### **🔹 Step 1: Install Splunk**
-For **Ubuntu/Linux**, install Splunk:
-```sh
-wget -O splunk.deb https://download.splunk.com/products/splunk/releases/latest/linux/splunk-latest-linux-2.6-amd64.deb
-sudo dpkg -i splunk.deb
-sudo /opt/splunk/bin/splunk enable boot-start
-sudo /opt/splunk/bin/splunk start --accept-license
+## **1. Prerequisites**
+Before configuring the Splunk logging driver, ensure the following:
+
+- **Docker Installed:** Ensure that Docker is installed on your system.
+- **Splunk Server Running:** A Splunk server must be set up and configured to accept HTTP Event Collector (HEC) logs.
+- **HEC Token:** You need a Splunk HEC (HTTP Event Collector) token.
+- **Network Connectivity:** The Docker host must be able to communicate with the Splunk server.
+- **Docker Compose (optional):** If using `docker-compose`, ensure it is installed.
+
+---
+
+## **2. All Prerequisite Commands**
+Run the following commands to install required dependencies:
+
+### **A. Install Docker (If not already installed)**
+```bash
+# Update package list and install dependencies
+sudo apt update
+sudo apt install -y curl ca-certificates gnupg lsb-release
+
+# Add Docker’s official GPG key
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+
+# Add the Docker repository
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] \
+https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+# Install Docker
+sudo apt update
+sudo apt install -y docker-ce docker-ce-cli containerd.io
+
+# Verify Docker installation
+docker --version
 ```
-For **Docker-based Splunk installation**:
-```sh
+
+---
+
+### **B. Install and Start Splunk**
+You can use a Docker container to set up a Splunk server quickly:
+
+```bash
 docker run -d --name splunk \
-  -p 8000:8000 -p 8088:8088 -p 9997:9997 \
-  -e "SPLUNK_START_ARGS=--accept-license" \
-  -e "SPLUNK_PASSWORD=changeme" \
+  -e SPLUNK_START_ARGS="--accept-license" \
+  -e SPLUNK_PASSWORD="YourStrongPassword" \
+  -p 8000:8000 -p 8088:8088 -p 8089:8089 \
   splunk/splunk:latest
 ```
-✔ Splunk will be **available at `http://localhost:8000`**.
+- **Splunk UI**: Open `http://localhost:8000` in a browser and log in with:
+  - **Username**: `admin`
+  - **Password**: `YourStrongPassword`
+- **Enable HEC (HTTP Event Collector)**:
+  1. Go to **Settings > Data Inputs > HTTP Event Collector**.
+  2. Click **New Token**.
+  3. Name it `docker-logs` and enable it.
+  4. Copy the generated token for use in the logging configuration.
 
 ---
 
-### **🔹 Step 2: Create a Splunk HEC Token**
-1. **Login to Splunk** at `http://localhost:8000`
-2. **Go to Settings → Data Inputs**
-3. **Enable HTTP Event Collector (HEC)**
-4. **Create a New Token**
-   - **Name:** `docker_logs`
-   - **Source Type:** `_json`
-   - **Index:** `main`
-   - **Copy the generated token** (used in the Docker configuration)
+## **3. Step-by-Step Configuration for Beginners**
+Once you have Splunk running and an HEC token, follow these steps to configure Docker logging:
 
----
-
-## **📌 2️⃣ Configure Docker to Use Splunk Logging Driver**
-### **🔹 Step 1: Modify Docker Daemon Configuration**
-Edit Docker’s **daemon.json** file:
-```sh
-sudo nano /etc/docker/daemon.json
-```
-Add the following configuration:
-```json
-{
-  "log-driver": "splunk",
-  "log-opts": {
-    "splunk-token": "<your_splunk_token>",
-    "splunk-url": "http://localhost:8088",
-    "splunk-insecureskipverify": "true",
-    "splunk-index": "main",
-    "splunk-source": "docker-logs",
-    "splunk-sourcetype": "_json"
-  }
-}
-```
-Save and exit (`CTRL + X`, `Y`, `ENTER`).
-
----
-
-### **🔹 Step 2: Restart Docker**
-```sh
-sudo systemctl restart docker
-```
-
----
-
-## **📌 3️⃣ Test Docker Logging with Splunk**
-### **🔹 Step 1: Run a Container with Splunk Logging**
-```sh
-docker run --log-driver=splunk \
-  --log-opt splunk-token="<your_splunk_token>" \
-  --log-opt splunk-url="http://localhost:8088" \
-  --log-opt splunk-index="main" \
-  --log-opt splunk-source="docker-logs" \
-  --log-opt splunk-sourcetype="_json" \
-  alpine echo "Hello, Splunk Logging!"
-```
-✔ This **sends logs** to **Splunk’s HTTP Event Collector (HEC)**.
-
----
-
-### **🔹 Step 2: Verify Logs in Splunk**
-1. **Login to Splunk (`http://localhost:8000`)**
-2. **Go to Search & Reporting**
-3. **Run the search query:**
-   ```splunk
-   index=main sourcetype=_json source=docker-logs
+### **A. Configure Docker to Use the Splunk Logging Driver**
+#### **Method 1: Set Splunk as the Default Logging Driver**
+1. Open Docker's **daemon.json** file:
+   ```bash
+   sudo nano /etc/docker/daemon.json
    ```
-4. **See the logs appear in real-time**!
+2. Add or modify the following content:
+   ```json
+   {
+     "log-driver": "splunk",
+     "log-opts": {
+       "splunk-url": "http://localhost:8088",
+       "splunk-token": "your-splunk-hec-token",
+       "splunk-source": "docker",
+       "splunk-sourcetype": "json",
+       "splunk-index": "main",
+       "splunk-insecureskipverify": "true"
+     }
+   }
+   ```
+3. Save the file (`CTRL + X`, then `Y`, then `ENTER`).
+4. Restart Docker:
+   ```bash
+   sudo systemctl restart docker
+   ```
+5. Verify the configuration:
+   ```bash
+   docker info | grep -i "Logging Driver"
+   ```
+   It should show:
+   ```
+   Logging Driver: splunk
+   ```
 
 ---
 
-## **📌 4️⃣ Verify the Logging Driver**
-Check the **configured logging driver**:
-```sh
-docker info | grep "Logging Driver"
-```
-✔ Expected Output:
-```
-Logging Driver: splunk
-```
+### **B. Configure a Single Container to Use the Splunk Logging Driver**
+If you don’t want to set Splunk as the global logging driver, you can configure it per container.
 
----
-
-## **✅ Summary: Configuring Splunk as Docker's Logging Driver**
-| **Task** | **Command/Action** |
-|----------|--------------------|
-| **Install Splunk** | `docker run -d --name splunk -p 8000:8000 -p 8088:8088 splunk/splunk:latest` |
-| **Create Splunk HEC Token** | **Splunk UI → Settings → Data Inputs → HTTP Event Collector** |
-| **Modify Docker Logging Config** | Edit `/etc/docker/daemon.json` |
-| **Restart Docker** | `sudo systemctl restart docker` |
-| **Run a Container with Splunk Logging** | `docker run --log-driver=splunk --log-opt ...` |
-| **Verify Logs in Splunk** | `index=main sourcetype=_json source=docker-logs` |
-
----
-This setup **integrates Docker logs with Splunk** for **real-time monitoring**! 🚀🔥  
-
-### **🔹 Fixing Issues with Splunk Docker Installation on Mac M1/M2 (ARM64)** 🚀  
-
-You're facing **two main issues**:  
-1️⃣ **Docker scan plugin error** → This warning is not critical, but you can remove the plugin.  
-2️⃣ **Splunk image issue (`no matching manifest for linux/arm64/v8`)** → This happens because Splunk does not have a native ARM64 version.
-
----
-
-## **📌 1️⃣ Fixing the Docker Scan Plugin Issue**
-### **🔹 Remove the invalid plugin**
-```sh
-rm -rf ~/.docker/cli-plugins/docker-scan
-```
-✔ This will **remove the invalid scan plugin**.
-
----
-
-## **📌 2️⃣ Running Splunk on Mac M1/M2 (ARM64)**
-### **🔹 Step 1: Pull the Correct Splunk Image**
-Splunk **does not support ARM64**, so we must run it using **platform emulation**.
-
-```sh
-docker run --platform linux/amd64 -d --name splunk \
-  -p 8000:8000 -p 8088:8088 -p 9997:9997 \
-  -e "SPLUNK_START_ARGS=--accept-license" \
-  -e "SPLUNK_PASSWORD=changeme" \
-  splunk/splunk:latest
-```
-✔ This forces **Docker to run the AMD64 version** on an ARM-based Mac.
-
-### **🔹 Step 2: Verify Splunk is Running**
-```sh
-docker ps
-```
-✔ Check if the Splunk container is **up and running**.
-
-### **🔹 Step 3: Open Splunk**
-Go to **`http://localhost:8000`** and log in using:  
-- **Username:** `admin`  
-- **Password:** `changeme`
-
----
-
-## **📌 3️⃣ Configure Splunk as Docker's Logging Driver**
-Since **macOS uses Docker Desktop (a virtualized environment)**, `daemon.json` is not directly available. Instead, use this command:
-
-```sh
-docker run --log-driver=splunk \
-  --log-opt splunk-token="<your_splunk_token>" \
+Run the container with Splunk logging:
+```bash
+docker run -d --log-driver=splunk \
   --log-opt splunk-url="http://localhost:8088" \
-  --log-opt splunk-insecureskipverify="true" \
+  --log-opt splunk-token="your-splunk-hec-token" \
+  --log-opt splunk-source="docker" \
+  --log-opt splunk-sourcetype="json" \
   --log-opt splunk-index="main" \
-  alpine echo "Hello, Splunk Logging!"
+  --log-opt splunk-insecureskipverify="true" \
+  --name test-container nginx
 ```
 
 ---
 
-## **✅ Summary of Fixes**
-| **Issue** | **Fix** |
-|-----------|--------|
-| **Docker Scan Plugin Error** | `rm -rf ~/.docker/cli-plugins/docker-scan` |
-| **Splunk Image Not Found for ARM64** | Use `--platform linux/amd64` when running Splunk |
-| **Verify Running Containers** | `docker ps` |
-| **Access Splunk UI** | `http://localhost:8000` |
+### **C. Configure Splunk Logging in Docker-Compose**
+If you use `docker-compose.yml`, configure the logging driver like this:
 
----
-This setup **fixes your Mac M1/M2 compatibility issues** and enables **Docker logging with Splunk**! 🚀🔥  
-
-### **🔹 Check if the Splunk Container is Running** 🚀  
-
-After running the Splunk container, you can verify its status using **Docker commands**.
-
----
-
-## **📌 1️⃣ Check Running Containers**
-Run the following command:
-```sh
-docker ps | grep splunk
+```yaml
+version: '3'
+services:
+  web:
+    image: nginx
+    container_name: nginx-container
+    logging:
+      driver: splunk
+      options:
+        splunk-url: "http://localhost:8088"
+        splunk-token: "your-splunk-hec-token"
+        splunk-source: "docker"
+        splunk-sourcetype: "json"
+        splunk-index: "main"
+        splunk-insecureskipverify: "true"
 ```
-✔ This will show if the **Splunk container is running**.
 
-### **🔹 Expected Output (If Running)**
-```
-CONTAINER ID   IMAGE               STATUS        PORTS
-abcdef123456   splunk/splunk:latest Up 2 minutes 0.0.0.0:8000->8000/tcp
-```
-✔ If you see **"Up X minutes"**, Splunk is **running correctly**.
-
----
-
-## **📌 2️⃣ Check Splunk Logs**
-If the container is **not running**, check logs for issues:
-```sh
-docker logs splunk
-```
-✔ Look for errors like:
-- License not accepted → **Fix by adding `--accept-license`**
-- Authentication issues → **Check `SPLUNK_PASSWORD`**
-- Port conflicts → **Ensure ports `8000`, `8088`, `9997` are free**
-
----
-
-## **📌 3️⃣ Check Container Status Even if Stopped**
-If Splunk is **not running**, check stopped containers:
-```sh
-docker ps -a | grep splunk
-```
-✔ If you see **"Exited"**, the container crashed.
-
-### **🔹 Restart Splunk**
-```sh
-docker start splunk
+Deploy the container:
+```bash
+docker-compose up -d
 ```
 
 ---
 
-## **📌 4️⃣ Check if Splunk Web UI is Accessible**
-Open:
-```
-http://localhost:8000
-```
-✔ **Default Login Credentials**:
-- **Username:** `admin`
-- **Password:** `changeme` (or the password you set)
+### **D. Verify Logs in Splunk**
+1. Open **Splunk Web UI** at `http://localhost:8000`.
+2. Log in and go to **Search & Reporting**.
+3. Search for logs:
+   ```
+   index="main" sourcetype="json"
+   ```
+   You should see logs from your Docker containers.
 
 ---
 
-## **✅ Summary: Checking if Splunk is Running**
-| **Check** | **Command** |
-|-----------|------------|
-| **List running containers** | `docker ps | grep splunk` |
-| **Check Splunk logs** | `docker logs splunk` |
-| **Check stopped containers** | `docker ps -a | grep splunk` |
-| **Restart Splunk** | `docker start splunk` |
-| **Access Splunk Web UI** | `http://localhost:8000` |
+## **Summary**
+✅ **Step 1:** Install Docker and run Splunk.  
+✅ **Step 2:** Enable HEC and get a token.  
+✅ **Step 3:** Configure Docker daemon or per-container logging.  
+✅ **Step 4:** Deploy containers with Splunk logging enabled.  
+✅ **Step 5:** Check logs in the Splunk Web UI.  
 
----
-If Splunk is **not running**, let me know what error you see! 🚀🔥
+This step-by-step guide helps beginners integrate **Docker logging** with **Splunk** efficiently. 🚀
