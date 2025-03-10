@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  web1:
+    image: nginx
+    container_name: container1
+    networks:
+      - my_bridge_network
+    logging:
+      driver: "json-file"
+
+  web2:
+    image: nginx
+    container_name: container2
+    networks:
+      - my_bridge_network
+    logging:
+      driver: "json-file"
+
+networks:
+  my_bridge_network:
+    driver: bridge
